@@ -1,2 +1,6 @@
-# gula_appong_webapp
-This repository has to do with a web app for the ministry of agriculture to determine gula apong production in the region.
+# gula_appong_server
+Handle user registration through mobile app.
+
+* Creates user record in __users_ table
+* Creates tables for a user
+* Sets security for tables

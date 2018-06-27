@@ -88,6 +88,9 @@ exports.createDatabaseForUser = function (req, res) {
         })
         .then(function () {
             res.status(200).type('text/plain').send('OK');
+        })
+        .catch(function (err) {
+            res.status(409).type('text/plain').send(err.message);
         });
 
 };
