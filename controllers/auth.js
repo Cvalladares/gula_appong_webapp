@@ -5,7 +5,9 @@ let BASE_API_URL = "http://admin:Malaysia@54.255.228.108:5984/";
 let DATABASES = [
     'profile',
     'production',
-    'farm'
+    'farm',
+    'customer',
+    'demand'
 ];
 
 function setSecurityForDatabase(userId, database) {
