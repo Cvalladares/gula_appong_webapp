@@ -96,3 +96,63 @@ exports.createDatabaseForUser = function (req, res) {
         });
 
 };
+
+let usernamePrefix = 'org.couchdb.user:';
+exports.listUsers = function (req, res) {
+    let url = BASE_API_URL + '_users/_all_docs';
+    console.debug(url);
+
+    let options = {
+        method: 'GET',
+        uri: url
+    };
+    rp.get(options)
+        .then(function (docs) {
+            docs = JSON.parse(docs);
+            let usernames = docs.rows
+                .filter(x => x.id.includes(usernamePrefix))
+                .map(x => x.id.slice(usernamePrefix.length));
+            return Promise.all(getProfileInfos(usernames));
+        })
+        .then(function (results) {
+            return results
+                .filter(x => typeof x !== 'undefined' && x);
+        })
+        .then(function (docs) {
+            res.status(200).type('json').send({names: docs});
+        })
+        .catch(function (err) {
+            res.status(409).type('text/plain').send(err.message);
+        });
+};
+
+function getProfileInfos(usernames) {
+    let promises = [];
+    usernames.forEach(function (username) {
+        promises.push(getProfileInfo(username));
+    });
+    return promises;
+}
+
+function getProfileInfo(username) {
+    let database = 'user_' + username + '_profile';
+    let url = BASE_API_URL + database + '/profile';
+    console.debug(url);
+
+    let options = {
+        method: 'GET',
+        uri: url
+    };
+    return rp.get(options)
+        .then(function (docs) {
+            let profile = JSON.parse(docs);
+            profile.username = username;
+            delete profile._id;
+            delete profile._rev;
+            return profile;
+        })
+        .catch(function (err) {
+            // console.error(err);
+            // throw err;
+        });
+}
