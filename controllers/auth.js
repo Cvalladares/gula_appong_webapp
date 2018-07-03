@@ -98,7 +98,8 @@ exports.createDatabaseForUser = function (req, res) {
 };
 
 let usernamePrefix = 'org.couchdb.user:';
-exports.listUsers = function (req, res) {
+
+function listUsers() {
     let url = BASE_API_URL + '_users/_all_docs';
     console.debug(url);
 
@@ -106,7 +107,7 @@ exports.listUsers = function (req, res) {
         method: 'GET',
         uri: url
     };
-    rp.get(options)
+    return rp.get(options)
         .then(function (docs) {
             docs = JSON.parse(docs);
             let usernames = docs.rows
@@ -118,6 +119,10 @@ exports.listUsers = function (req, res) {
             return results
                 .filter(x => typeof x !== 'undefined' && x);
         })
+}
+
+exports.listUsers = function (req, res) {
+    listUsers()
         .then(function (docs) {
             res.status(200).type('json').send({names: docs});
         })
@@ -154,5 +159,21 @@ function getProfileInfo(username) {
         .catch(function (err) {
             // console.error(err);
             // throw err;
+        });
+}
+
+exports.listUsersExcel = function (req, res) {
+    listUsers()
+        .then(function (docs) {
+            const replacer = (key, value) => value === null ? '' : value // specify how you want to handle null values here
+            const header = Object.keys(docs[0])
+            let csv = docs.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+            csv.unshift(header.join(','))
+            csv = csv.join('\r\n')
+
+
+            res.setHeader('Content-disposition', 'attachment; filename=testing.csv');
+            res.set('Content-Type', 'text/csv');
+            res.status(200).send(csv);
         });
 }
